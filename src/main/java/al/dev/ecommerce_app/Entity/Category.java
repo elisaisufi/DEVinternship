@@ -1,5 +1,6 @@
 package al.dev.ecommerce_app.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,9 +19,13 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "category")
+    @Column(nullable = false)
+    private boolean isActive = true;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Product> products;
 }
