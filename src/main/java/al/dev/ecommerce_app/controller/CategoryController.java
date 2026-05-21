@@ -5,6 +5,7 @@ import al.dev.ecommerce_app.entity.Category;
 import al.dev.ecommerce_app.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +17,33 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Category create(@Valid @RequestBody CategoryDto dto) {
+
         return categoryService.create(dto);
     }
 
     @GetMapping
     public List<Category> getAll() {
+
         return categoryService.getAll();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
+
         categoryService.delete(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Category update(
             @PathVariable Long id,
             @Valid @RequestBody CategoryDto dto
     ) {
+
         return categoryService.update(id, dto);
     }
 }

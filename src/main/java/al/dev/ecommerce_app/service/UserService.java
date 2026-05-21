@@ -7,6 +7,9 @@ import al.dev.ecommerce_app.enums.Role;
 import al.dev.ecommerce_app.exception.CustomException;
 import al.dev.ecommerce_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +19,8 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     public User register(UserDto dto) {
 
@@ -30,33 +35,37 @@ public class UserService {
         User user = User.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
-                .password(dto.getPassword())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .role(Role.USER)
                 .build();
 
         return userRepository.save(user);
     }
 
-    public User login(LoginDto dto) {
+    public String login(LoginDto dto) {
 
-        User user = userRepository.findByUsername(dto.getUsername())
-                .orElseThrow(() ->
-                        new CustomException("Invalid username or password")
-                );
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        dto.getUsername(),
+                        dto.getPassword()
+                )
+        );
 
-        if(!user.getPassword().equals(dto.getPassword())) {
-            throw new CustomException("Invalid username or password");
-        }
-
-        return user;
+        return "Login successful";
     }
 
     public User getById(Long id) {
 
-        return userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() ->
                         new CustomException("User not found")
                 );
+
+        if(!user.isActive()) {
+            throw new CustomException("User not found");
+        }
+
+        return user;
     }
 
     public User createAdmin(UserDto dto) {
@@ -72,7 +81,7 @@ public class UserService {
         User admin = User.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
-                .password(dto.getPassword())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .role(Role.ADMIN)
                 .build();
 
@@ -80,6 +89,16 @@ public class UserService {
     }
 
     public List<User> getAllUsers() {
+
         return userRepository.findByIsActiveTrue();
+    }
+
+    public void delete(Long id) {
+
+        User user = getById(id);
+
+        user.setActive(false);
+
+        userRepository.save(user);
     }
 }

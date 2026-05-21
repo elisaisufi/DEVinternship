@@ -5,6 +5,7 @@ import al.dev.ecommerce_app.entity.Product;
 import al.dev.ecommerce_app.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,36 +17,45 @@ public class ProductController {
 
     private final ProductService productService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Product create(@Valid @RequestBody ProductDto dto) {
+
         return productService.create(dto);
     }
 
     @GetMapping
     public List<Product> getAll() {
+
         return productService.getAll();
     }
 
     @GetMapping("/{id}")
     public Product getById(@PathVariable Long id) {
+
         return productService.getById(id);
     }
 
     @GetMapping("/search")
     public List<Product> search(@RequestParam String name) {
+
         return productService.search(name);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Product update(
             @PathVariable Long id,
             @Valid @RequestBody ProductDto dto
     ) {
+
         return productService.update(id, dto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
+
         productService.delete(id);
     }
 }

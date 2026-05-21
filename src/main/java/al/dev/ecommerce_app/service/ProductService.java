@@ -25,6 +25,10 @@ public class ProductService {
                         new CustomException("Category not found")
                 );
 
+        if(!category.isActive()) {
+            throw new CustomException("Category not found");
+        }
+
         Product product = Product.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
@@ -37,6 +41,7 @@ public class ProductService {
     }
 
     public List<Product> getAll() {
+
         return productRepository.findByIsActiveTrue();
     }
 
@@ -68,6 +73,10 @@ public class ProductService {
                 .orElseThrow(() ->
                         new CustomException("Category not found")
                 );
+
+        if(!category.isActive()) {
+            throw new CustomException("Category not found");
+        }
 
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
