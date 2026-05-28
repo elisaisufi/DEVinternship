@@ -1,7 +1,7 @@
 package al.dev.ecommerce_app.controller;
 
 import al.dev.ecommerce_app.dto.ProductDto;
-import al.dev.ecommerce_app.entity.Product;
+import al.dev.ecommerce_app.dto.ProductResponse;
 import al.dev.ecommerce_app.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,32 +19,32 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public Product create(@Valid @RequestBody ProductDto dto) {
+    public ProductResponse create(@Valid @RequestBody ProductDto dto) {
 
         return productService.create(dto);
     }
 
     @GetMapping
-    public List<Product> getAll() {
+    public List<ProductResponse> getAll() {
 
         return productService.getAll();
     }
 
     @GetMapping("/{id}")
-    public Product getById(@PathVariable Long id) {
+    public ProductResponse getById(@PathVariable Long id) {
 
         return productService.getById(id);
     }
 
     @GetMapping("/search")
-    public List<Product> search(@RequestParam String name) {
+    public List<ProductResponse> search(@RequestParam String name) {
 
         return productService.search(name);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public Product update(
+    public ProductResponse update(
             @PathVariable Long id,
             @Valid @RequestBody ProductDto dto
     ) {

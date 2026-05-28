@@ -1,17 +1,14 @@
 package al.dev.ecommerce_app.service;
 
-import al.dev.ecommerce_app.entity.CartItem;
-import al.dev.ecommerce_app.entity.Order;
-import al.dev.ecommerce_app.entity.OrderItem;
-import al.dev.ecommerce_app.entity.Product;
-import al.dev.ecommerce_app.entity.User;
+import al.dev.ecommerce_app.dto.OrderResponse;
+import al.dev.ecommerce_app.entity.*;
 import al.dev.ecommerce_app.enums.OrderStatus;
 import al.dev.ecommerce_app.exception.CustomException;
 import al.dev.ecommerce_app.repository.OrderRepository;
 import al.dev.ecommerce_app.repository.ProductRepository;
-import al.dev.ecommerce_app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -22,20 +19,19 @@ import java.util.List;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final UserService userService;
     private final CartService cartService;
 
-    public Order checkout(Long userId) {
+    @Transactional
+    public OrderResponse checkout(String username) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new CustomException("User not found")
-                );
+        User user = userService.getByUsername(username);
 
-        List<CartItem> cartItems = cartService.getUserCart(userId);
+        List<CartItem> cartItems =
+                cartService.getCartItemsByUserId(user.getId());
 
-        if(cartItems.isEmpty()) {
+        if (cartItems.isEmpty()) {
             throw new CustomException("Cart is empty");
         }
 
@@ -48,11 +44,17 @@ public class OrderService {
 
         List<OrderItem> orderItems = new ArrayList<>();
 
-        for(CartItem cartItem : cartItems) {
+        for (CartItem cartItem : cartItems) {
 
             Product product = cartItem.getProduct();
 
-            if(product.getStock() < cartItem.getQuantity()) {
+            if (!product.isActive()) {
+                throw new CustomException(
+                        product.getName() + " is unavailable"
+                );
+            }
+
+            if (product.getStock() < cartItem.getQuantity()) {
                 throw new CustomException(
                         product.getName() + " is out of stock"
                 );
@@ -64,8 +66,10 @@ public class OrderService {
 
             productRepository.save(product);
 
-            BigDecimal itemTotal = product.getPrice()
-                    .multiply(BigDecimal.valueOf(cartItem.getQuantity()));
+            BigDecimal itemTotal =
+                    product.getPrice().multiply(
+                            BigDecimal.valueOf(cartItem.getQuantity())
+                    );
 
             total = total.add(itemTotal);
 
@@ -84,29 +88,47 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        cartService.clearCart(userId);
+        cartService.clearCart(user.getId());
 
-        return savedOrder;
+        return OrderResponse.from(savedOrder);
     }
 
-    public List<Order> getUserOrders(Long userId) {
+    public List<OrderResponse> getUserOrders(String username) {
 
-        return orderRepository.findByUserId(userId);
+        User user = userService.getByUsername(username);
+
+        return orderRepository.findByUserId(user.getId())
+                .stream()
+                .map(OrderResponse::from)
+                .toList();
     }
 
-    public Order payOrder(Long orderId, boolean paymentSuccessful) {
+    public OrderResponse payOrder(
+            Long orderId,
+            boolean paymentSuccessful,
+            String username
+    ) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() ->
                         new CustomException("Order not found")
                 );
 
-        if(paymentSuccessful) {
-            order.setStatus(OrderStatus.PAID);
-        } else {
-            order.setStatus(OrderStatus.FAILED);
+        if (!order.getUser()
+                .getUsername()
+                .equals(username)) {
+
+            throw new CustomException("Access denied");
         }
 
-        return orderRepository.save(order);
+        order.setStatus(
+                paymentSuccessful
+                        ? OrderStatus.PAID
+                        : OrderStatus.FAILED
+        );
+
+        return OrderResponse.from(
+                orderRepository.save(order)
+        );
     }
 }

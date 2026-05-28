@@ -2,6 +2,7 @@ package al.dev.ecommerce_app.service;
 
 import al.dev.ecommerce_app.dto.LoginDto;
 import al.dev.ecommerce_app.dto.UserDto;
+import al.dev.ecommerce_app.dto.UserResponse;
 import al.dev.ecommerce_app.entity.User;
 import al.dev.ecommerce_app.enums.Role;
 import al.dev.ecommerce_app.exception.CustomException;
@@ -22,24 +23,19 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    public User register(UserDto dto) {
+    public UserResponse register(UserDto dto) {
 
-        if(userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new CustomException("Username already exists");
-        }
-
-        if(userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new CustomException("Email already exists");
-        }
+        validateUser(dto);
 
         User user = User.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(Role.USER)
+                .isActive(true)
                 .build();
 
-        return userRepository.save(user);
+        return UserResponse.from(userRepository.save(user));
     }
 
     public String login(LoginDto dto) {
@@ -54,43 +50,27 @@ public class UserService {
         return "Login successful";
     }
 
-    public User getById(Long id) {
+    public UserResponse createAdmin(UserDto dto) {
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() ->
-                        new CustomException("User not found")
-                );
-
-        if(!user.isActive()) {
-            throw new CustomException("User not found");
-        }
-
-        return user;
-    }
-
-    public User createAdmin(UserDto dto) {
-
-        if(userRepository.findByUsername(dto.getUsername()).isPresent()) {
-            throw new CustomException("Username already exists");
-        }
-
-        if(userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new CustomException("Email already exists");
-        }
+        validateUser(dto);
 
         User admin = User.builder()
                 .username(dto.getUsername())
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(Role.ADMIN)
+                .isActive(true)
                 .build();
 
-        return userRepository.save(admin);
+        return UserResponse.from(userRepository.save(admin));
     }
 
-    public List<User> getAllUsers() {
+    public List<UserResponse> getAllUsers() {
 
-        return userRepository.findByIsActiveTrue();
+        return userRepository.findByIsActiveTrue()
+                .stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
     public void delete(Long id) {
@@ -100,5 +80,44 @@ public class UserService {
         user.setActive(false);
 
         userRepository.save(user);
+    }
+
+    public User getByUsername(String username) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new CustomException("User not found")
+                );
+
+        if (!user.isActive()) {
+            throw new CustomException("User not found");
+        }
+
+        return user;
+    }
+
+    public User getById(Long id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new CustomException("User not found")
+                );
+
+        if (!user.isActive()) {
+            throw new CustomException("User not found");
+        }
+
+        return user;
+    }
+
+    private void validateUser(UserDto dto) {
+
+        if (userRepository.findByUsername(dto.getUsername()).isPresent()) {
+            throw new CustomException("Username already exists");
+        }
+
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new CustomException("Email already exists");
+        }
     }
 }

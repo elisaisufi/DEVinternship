@@ -1,10 +1,12 @@
 package al.dev.ecommerce_app.controller;
 
 import al.dev.ecommerce_app.dto.CartDto;
-import al.dev.ecommerce_app.entity.CartItem;
+import al.dev.ecommerce_app.dto.CartItemResponse;
 import al.dev.ecommerce_app.service.CartService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,26 +18,39 @@ public class CartController {
 
     private final CartService cartService;
 
+    // userId is now taken from the logged-in user, not from the request body
     @PostMapping
-    public CartItem addToCart(@Valid @RequestBody CartDto dto) {
-        return cartService.addToCart(dto);
+    public CartItemResponse addToCart(
+            @Valid @RequestBody CartDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return cartService.addToCart(dto, userDetails.getUsername());
     }
 
-    @GetMapping("/{userId}")
-    public List<CartItem> getUserCart(@PathVariable Long userId) {
-        return cartService.getUserCart(userId);
+    // No userId in path — cart always belongs to the authenticated user
+    @GetMapping
+    public List<CartItemResponse> getMyCart(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return cartService.getUserCart(userDetails.getUsername());
     }
 
     @PutMapping("/{cartItemId}")
-    public CartItem updateQuantity(
+    public CartItemResponse updateQuantity(
             @PathVariable Long cartItemId,
-            @RequestParam int quantity
+            @RequestParam int quantity,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        return cartService.updateQuantity(cartItemId, quantity);
+        return cartService.updateQuantity(
+                cartItemId, quantity, userDetails.getUsername()
+        );
     }
 
     @DeleteMapping("/{cartItemId}")
-    public void removeItem(@PathVariable Long cartItemId) {
-        cartService.removeItem(cartItemId);
+    public void removeItem(
+            @PathVariable Long cartItemId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        cartService.removeItem(cartItemId, userDetails.getUsername());
     }
 }

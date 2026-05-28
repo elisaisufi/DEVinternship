@@ -1,7 +1,7 @@
 package al.dev.ecommerce_app.controller;
 
 import al.dev.ecommerce_app.dto.CategoryDto;
-import al.dev.ecommerce_app.entity.Category;
+import al.dev.ecommerce_app.dto.CategoryResponse;
 import al.dev.ecommerce_app.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,15 +19,25 @@ public class CategoryController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public Category create(@Valid @RequestBody CategoryDto dto) {
+    public CategoryResponse create(@Valid @RequestBody CategoryDto dto) {
 
         return categoryService.create(dto);
     }
 
     @GetMapping
-    public List<Category> getAll() {
+    public List<CategoryResponse> getAll() {
 
         return categoryService.getAll();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public CategoryResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody CategoryDto dto
+    ) {
+
+        return categoryService.update(id, dto);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -35,15 +45,5 @@ public class CategoryController {
     public void delete(@PathVariable Long id) {
 
         categoryService.delete(id);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public Category update(
-            @PathVariable Long id,
-            @Valid @RequestBody CategoryDto dto
-    ) {
-
-        return categoryService.update(id, dto);
     }
 }
