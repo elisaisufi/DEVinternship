@@ -28,6 +28,7 @@ public class ProductService {
                 .price(dto.getPrice())
                 .stock(dto.getStock())
                 .category(category)
+                .isActive(true)
                 .build();
 
         return ProductResponse.from(

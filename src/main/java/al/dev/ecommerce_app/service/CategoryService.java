@@ -21,6 +21,7 @@ public class CategoryService {
 
         Category category = Category.builder()
                 .name(dto.getName())
+                .isActive(true)
                 .build();
 
         return CategoryResponse.from(categoryRepository.save(category));
