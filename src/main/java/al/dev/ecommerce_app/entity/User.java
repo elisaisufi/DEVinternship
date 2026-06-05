@@ -34,12 +34,14 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    // soft delete ( instead of removing user, we set them to not active)
     @Column(nullable = false)
     private boolean isActive = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // one user can have many orders
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Order> orders;

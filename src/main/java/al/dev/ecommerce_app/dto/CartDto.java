@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class CartDto {
 
-    // userId removed — the authenticated user is resolved from the security context
+    // userId removed, user comes from logged-in session
 
     @NotNull(message = "Product id is required")
     private Long productId;

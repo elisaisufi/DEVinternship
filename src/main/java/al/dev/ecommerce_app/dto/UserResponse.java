@@ -15,6 +15,7 @@ public class UserResponse {
     private Role role;
     private LocalDateTime createdAt;
 
+    // converting entities into safe JSON ( we don't return password )
     public static UserResponse from(User user) {
 
         UserResponse response = new UserResponse();

@@ -23,7 +23,7 @@ public class OrderService {
     private final UserService userService;
     private final CartService cartService;
 
-    @Transactional
+    @Transactional // Ensures all checkout operations succeed or rollback together
     public OrderResponse checkout(String username) {
 
         User user = userService.getByUsername(username);
@@ -37,6 +37,7 @@ public class OrderService {
 
         BigDecimal total = BigDecimal.ZERO;
 
+        // Create new order with initial PENDING status
         Order order = new Order();
 
         order.setUser(user);
@@ -60,6 +61,7 @@ public class OrderService {
                 );
             }
 
+            // Reduce inventory after successful validation
             product.setStock(
                     product.getStock() - cartItem.getQuantity()
             );
@@ -121,6 +123,7 @@ public class OrderService {
             throw new CustomException("Access denied");
         }
 
+        // Payment result
         order.setStatus(
                 paymentSuccessful
                         ? OrderStatus.PAID

@@ -23,6 +23,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    // checks if username, email exist
+    // creates user object
     public UserResponse register(UserDto dto) {
 
         validateUser(dto);
@@ -110,6 +112,7 @@ public class UserService {
         return user;
     }
 
+    // checks for duplicates
     private void validateUser(UserDto dto) {
 
         if (userRepository.findByUsername(dto.getUsername()).isPresent()) {

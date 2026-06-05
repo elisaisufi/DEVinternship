@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequiredArgsConstructor
+@RequiredArgsConstructor // creates constructor for final fields
 public class AuthController {
 
+    // we call user service to handle validations
     private final UserService userService;
 
+    // handle authentication and user administration
     @PostMapping("/auth/register")
     public UserResponse register(@Valid @RequestBody UserDto dto) {
 

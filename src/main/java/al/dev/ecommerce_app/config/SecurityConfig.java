@@ -17,12 +17,14 @@ import org.springframework.security.web.SecurityFilterChain;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // encrypt passwords
     @Bean
     public PasswordEncoder passwordEncoder() {
 
         return new BCryptPasswordEncoder();
     }
 
+    // used for login
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
@@ -31,6 +33,7 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // control endpoint access (public, user, admin)
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
